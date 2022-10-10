@@ -1,0 +1,26 @@
+version: "3.9"
+services:
+  app:
+    container_name: tickets_processor
+    image: araujoyuri/tickets_processor
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: local
+    command: uvicorn tickets_processor.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - .:/app
+    environment:
+      - .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      - dynamodb
+
+  dynamodb:
+    command: "-jar DynamoDBLocal.jar -sharedDb -dbPath ./data"
+    image: "amazon/dynamodb-local:latest"
+    container_name: dynamodb
+    volumes:
+      - "./docker/dynamodb:/home/dynamodblocal/data"
+    working_dir: /home/dynamodblocal
