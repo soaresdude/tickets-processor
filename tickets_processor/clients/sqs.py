@@ -28,6 +28,8 @@ class SqsClient:
         except ClientError as e:
             if e.response["Error"]["Code"] == "AWS.SimpleQueueService.NonExistentQueue":
                 return self._create_queue(queue_name)
+            else:
+                raise e
 
     def enqueue_message(
         self,
