@@ -1,10 +1,11 @@
 from fastapi import FastAPI
 
-from .routers import health
+from .routers import health, tickets
 
 app = FastAPI()
 
 app.include_router(health.router)
+app.include_router(tickets.router)
 
 
 @app.get("/hello/{name}")

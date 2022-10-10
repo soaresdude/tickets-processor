@@ -16,6 +16,7 @@ services:
       - "8000:8000"
     depends_on:
       - dynamodb
+      - sqs
 
   dynamodb:
     command: "-jar DynamoDBLocal.jar -sharedDb -dbPath ./data"
@@ -24,3 +25,12 @@ services:
     volumes:
       - "./docker/dynamodb:/home/dynamodblocal/data"
     working_dir: /home/dynamodblocal
+
+  sqs:
+    image: localstack/localstack
+    container_name: sqs
+    ports:
+      - "4566:4566"
+    environment:
+      SERVICES: sqs
+      EAGER_SERVICE_LOADING: 1
