@@ -15,22 +15,32 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - dynamodb
-      - sqs
+      - redis
 
-  dynamodb:
-    command: "-jar DynamoDBLocal.jar -sharedDb -dbPath ./data"
-    image: "amazon/dynamodb-local:latest"
-    container_name: dynamodb
+  worker:
+    container_name: tickets_processor-worker
+    image: araujoyuri/tickets_processor-worker
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: local
+    command: celery -A worker.main.celery flower --port=5555 worker -l INFO
     volumes:
-      - "./docker/dynamodb:/home/dynamodblocal/data"
-    working_dir: /home/dynamodblocal
-
-  sqs:
-    image: localstack/localstack
-    container_name: sqs
+      - .:/app
     ports:
-      - "4566:4566"
-    environment:
-      SERVICES: sqs
-      EAGER_SERVICE_LOADING: 1
+      - "5555:5555"
+    depends_on:
+      - app
+      - redis
+
+  redis:
+    image: redis
+    container_name: redis
+    command: redis-server
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+
+volumes:
+  redis_data:

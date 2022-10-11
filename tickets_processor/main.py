@@ -1,6 +1,12 @@
+import logging.config
+
 from fastapi import FastAPI
 
+from core.config import LOGGING
 from .routers import health, tickets
+
+
+logging.config.dictConfig(LOGGING)
 
 app = FastAPI()
 

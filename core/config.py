@@ -1,6 +1,7 @@
 import environs
 from pydantic import BaseSettings
 
+
 envs = environs.Env()
 envs.read_env()
 
@@ -64,7 +65,11 @@ LOGGING = {
 
 
 class Settings(BaseSettings):
+    JIRA_BASE_URL: str = envs.str("JIRA_BASE_URL")
+    JIRA_USER: str = envs.str("JIRA_USER")
     JIRA_API_TOKEN: str = envs.str("JIRA_API_TOKEN")
+    CELERY_BROKER_URL: str = "redis://redis:6379"
+    CELERY_RESULT_BACKEND: str = "redis://redis:6379"
 
 
 settings = Settings()

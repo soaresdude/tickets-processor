@@ -6,12 +6,15 @@ import backoff
 import httpx
 from httpx import Response, Request
 
-from ..core.config import settings
+from core.config import settings
+from tickets_processor.dtos.tickets import TicketInfo
+from worker.main import celery
 
 
 @dataclass
 class JiraClient:
-    base_url: str
+    base_url: str = settings.JIRA_BASE_URL
+    user: str = settings.JIRA_USER
     token: str = settings.JIRA_API_TOKEN
     logger: Logger = getLogger(__name__)
 
@@ -19,7 +22,6 @@ class JiraClient:
         return {
             "Accept": "*/*",
             "Content-Type": "application/json",
-            "Authorization": f"Basic {self.token}",
         }
 
     @staticmethod
@@ -64,20 +66,37 @@ class JiraClient:
         return logging_response_hook
 
     @backoff.on_exception(backoff.expo, httpx.HTTPError, max_tries=8)
-    async def _get_session(self) -> httpx.AsyncClient:
+    def _get_session(self) -> httpx.AsyncClient:
         client_session = httpx.AsyncClient(headers=self._get_headers())
         client_session.event_hooks["response"] = [self.logging_response_hook_wrapper()]
 
         return client_session
 
     @backoff.on_exception(backoff.expo, httpx.HTTPError, max_tries=8)
-    async def post(self, data: dict):
+    async def _post(self, data: dict, path: str):
         async with self._get_session() as session:
-            response = await session.post(self.base_url, json=data)
-            if response.status_code >= 500:
+            response = await session.post(self.base_url + path,
+                                          json=data,
+                                          auth=(settings.JIRA_USER, settings.JIRA_API_TOKEN))
+            if response.status_code >= 400:
                 response.raise_for_status()
             return response.json()
 
-
+    # @celery.task
+    async def create_ticket(self, ticket: TicketInfo):
+        data = {
+            "fields": {
+                "project":
+                    {
+                        "key": ticket.project
+                    },
+                "summary": ticket.summary,
+                "description": ticket.description,
+                "issuetype": {
+                    "name": ticket.issue_type
+                    }
+            }
+        }
+        return await self._post(data, "/rest/api/2/issue/")
 
 
