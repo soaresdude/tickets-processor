@@ -8,10 +8,9 @@ celery.conf.broker_url = settings.CELERY_BROKER_URL
 celery.conf.result_backend = settings.CELERY_RESULT_BACKEND
 
 celery.conf.update(
-    task_serializer='json',
-    accept_content=['json'],
-    result_serializer='json',
-    timezone='America/Brasilia',
+    task_track_started=True,
+    include=["tickets_processor.services.tickets"],
+    timezone='America/Sao_Paulo',
     enable_utc=True,
 )
 

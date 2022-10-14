@@ -7,8 +7,6 @@ import httpx
 from httpx import Response, Request
 
 from core.config import settings
-from tickets_processor.dtos.tickets import TicketInfo
-from worker.main import celery
 
 
 @dataclass
@@ -73,7 +71,7 @@ class JiraClient:
         return client_session
 
     @backoff.on_exception(backoff.expo, httpx.HTTPError, max_tries=8)
-    async def _post(self, data: dict, path: str):
+    async def post(self, data: dict, path: str):
         async with self._get_session() as session:
             response = await session.post(self.base_url + path,
                                           json=data,
@@ -81,22 +79,3 @@ class JiraClient:
             if response.status_code >= 400:
                 response.raise_for_status()
             return response.json()
-
-    @celery.task
-    async def create_ticket(self, ticket: TicketInfo):
-        data = {
-            "fields": {
-                "project":
-                    {
-                        "key": ticket.project
-                    },
-                "summary": ticket.summary,
-                "description": ticket.description,
-                "issuetype": {
-                    "name": ticket.issue_type
-                    }
-            }
-        }
-        return await self._post(data, "/rest/api/2/issue/")
-
-

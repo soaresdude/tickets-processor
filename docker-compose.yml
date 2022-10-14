@@ -24,7 +24,7 @@ services:
       context: .
       dockerfile: Dockerfile
       target: local
-    command: celery -A worker.main.celery worker -l INFO -E
+    command: celery -A worker.main.celery worker -P eventlet -l info -E
     volumes:
       - .:/app
     depends_on:
@@ -32,6 +32,7 @@ services:
       - redis
 
   flower:
+    container_name: tickets_processor-flower
     build:
       context: .
       dockerfile: Dockerfile

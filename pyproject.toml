@@ -18,6 +18,7 @@ Faker = "^15.0.0"
 celery = "^5.2.7"
 flower = "^1.2.0"
 redis = "^4.3.4"
+eventlet = "^0.33.1"
 
 
 [build-system]
