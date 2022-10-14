@@ -82,7 +82,7 @@ class JiraClient:
                 response.raise_for_status()
             return response.json()
 
-    # @celery.task
+    @celery.task
     async def create_ticket(self, ticket: TicketInfo):
         data = {
             "fields": {

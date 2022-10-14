@@ -24,13 +24,28 @@ services:
       context: .
       dockerfile: Dockerfile
       target: local
-    command: celery -A worker.main.celery flower --port=5555 worker -l INFO
+    command: celery -A worker.main.celery worker -l INFO -E
+    volumes:
+      - .:/app
+    depends_on:
+      - app
+      - redis
+
+  flower:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: local
+    command: sh -c "timeout 10 sleep 5 && celery -A worker.main.celery flower"
     volumes:
       - .:/app
     ports:
-      - "5555:5555"
+      - 5555:5555
+    environment:
+      CELERY_BROKER_URL: redis://redis
+      CELERY_RESULT_BACKEND: redis://redis
     depends_on:
-      - app
+      - worker
       - redis
 
   redis:
