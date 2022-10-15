@@ -11,7 +11,7 @@ router = APIRouter(
 
 
 @router.post("/generate", status_code=status.HTTP_202_ACCEPTED)
-async def generate_random_tickets(tickets_number: int = Body(1)):
+async def generate_random_tickets(tickets_number: int = Body(150)):
     enqueued_tickets = tickets_manager.generate_tickets(tickets_number)
 
     return {

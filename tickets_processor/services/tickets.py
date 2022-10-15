@@ -10,6 +10,7 @@ from faker import Faker
 
 from tickets_processor.clients.dynamodb import DynamoDBClient
 from tickets_processor.clients.jira import JiraClient
+from tickets_processor.clients.redis import RedisClient
 from tickets_processor.dtos.tickets import TicketInfo
 from worker.main import celery
 
@@ -17,7 +18,7 @@ from worker.main import celery
 faker = Faker()
 logger = getLogger(__name__)
 dynamodb = DynamoDBClient()
-results_cache = []
+redis = RedisClient()
 
 
 class TicketsManager:
@@ -39,7 +40,7 @@ class TicketsManager:
                 priority=self.priorities_type[randint(0, 4)]
             )
             enqueued_tickets.append(asdict(ticket))
-            time_to_run = randint(1, 60)
+            time_to_run = randint(1, 3600)
             try:
                 task = create_ticket.apply_async(kwargs={"ticket": asdict(ticket)}, countdown=time_to_run)
                 self.logger.info("TASK_CREATED", extra={
@@ -91,7 +92,7 @@ async def create_ticket(ticket: dict, jira_client: JiraClient = JiraClient()):
 
     try:
         response = await jira_client.post(data, "/rest/api/2/issue/")
-        results_cache.append(pendulum.now())
+        redis.append_to_key("results_cache", pendulum.now().format("YYYY-MM-DD HH:mm:ss"))
         if ticket["priority"] == "High" or ticket["priority"] == "Highest":
             ticket_info = TicketInfo(
                 id=int(response["id"]),
@@ -106,6 +107,6 @@ async def create_ticket(ticket: dict, jira_client: JiraClient = JiraClient()):
             logger.info("SAVING_PRIORITY_TICKET", extra=asdict(ticket_info))
             dynamodb.save_ticket(ticket_info)
     except Exception as e:
-        time_to_run = randint(1, 60)
+        time_to_run = randint(1, 3600)
         create_ticket.apply_async(kwargs={"ticket": ticket}, countdown=time_to_run)
         logger.exception(e)
