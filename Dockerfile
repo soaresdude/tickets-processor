@@ -14,4 +14,4 @@ RUN poetry install -n --no-root
 
 FROM base AS production
 RUN poetry install -n --no-dev --no-root
-CMD ["uvicorn", "src.app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "src.app.main:app", "--host", "0.0.0.0", "--port", "5000"]

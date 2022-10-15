@@ -7,13 +7,13 @@ services:
       context: .
       dockerfile: Dockerfile
       target: local
-    command: uvicorn tickets_processor.main:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn tickets_processor.main:app --host 0.0.0.0 --port 5000 --reload
     volumes:
       - .:/app
     environment:
       - .env
     ports:
-      - "8000:8000"
+      - "5000:5000"
     depends_on:
       - redis
 
@@ -57,6 +57,28 @@ services:
       - redis_data:/data
     ports:
       - "6379:6379"
+
+  dynamodb-local:
+    image: "amazon/dynamodb-local:latest"
+    container_name: dynamodb-local
+    ports:
+      - "8000:8000"
+    volumes:
+      - "./docker/dynamodb:/home/dynamodblocal/data"
+    working_dir: /home/dynamodblocal
+
+  dynamodb-admin:
+    image: aaronshaf/dynamodb-admin
+    container_name: dynamodb-admin
+    ports:
+      - "8001:8001"
+    environment:
+      DYNAMO_ENDPOINT: "http://dynamodb-local:8000"
+      AWS_REGION: "us-east-1"
+      AWS_ACCESS_KEY_ID: DUMMYIDEXAMPLE
+      AWS_SECRET_ACCESS_KEY: DUMMYEXAMPLEKEY
+    depends_on:
+      - dynamodb-local
 
 volumes:
   redis_data:

@@ -19,6 +19,12 @@ celery = "^5.2.7"
 flower = "^1.2.0"
 redis = "^4.3.4"
 eventlet = "^0.33.1"
+boto3 = "^1.24.91"
+boto3-stubs = "^1.24.91"
+plotly = "^5.10.0"
+pytz = "^2022.4"
+pendulum = "^2.1.2"
+pandas = "^1.5.0"
 
 
 [build-system]
