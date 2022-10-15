@@ -59,6 +59,11 @@ LOGGING = {
         "asyncio": {
             "level": "WARNING",
         },
+        "celery.task": {
+            "handlers": ["console", "json"],
+            "level": "INFO",
+            "propagate": True,
+        },
     },
     "root": {"level": "INFO", "handlers": LOGGING_HANDLERS},
 }

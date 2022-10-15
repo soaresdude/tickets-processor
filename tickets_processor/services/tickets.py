@@ -13,13 +13,14 @@ from worker.main import celery
 
 
 faker = Faker()
+logger = getLogger(__name__)
 
 
 class TicketsManager:
-    tickets_type: List = ["Story", "Bug", "Task", "Epic"]
+    tickets_type: List = ["Story", "Bug", "Task"]
     generator: Faker = faker
     jira_client: JiraClient = JiraClient()
-    logger: Logger = getLogger(__name__)
+    logger: Logger = logger
 
     def generate_tickets(self, tickets_number: int) -> List:
         enqueued_tickets = []
@@ -28,7 +29,7 @@ class TicketsManager:
             ticket = TicketInfo(
                 summary=self.generator.text(max_nb_chars=20),
                 description=self.generator.text(max_nb_chars=100),
-                issue_type=self.tickets_type[randint(0, 3)],
+                issue_type=self.tickets_type[randint(0, 2)],
                 project="TP"
             )
             enqueued_tickets.append(asdict(ticket))
@@ -50,7 +51,13 @@ class TicketsManager:
 def async_to_sync(func):
     @functools.wraps(func)
     def wrapped(*args, **kwargs):
-        return asyncio.run(func(*args, **kwargs))
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(func(*args, **kwargs))
 
     return wrapped
 
@@ -71,6 +78,6 @@ async def create_ticket(ticket: dict, jira_client: JiraClient = JiraClient()):
             }
         }
     }
-    jira_client.logger.info("TICKET_INFO", extra={**data})
+    logger.info("TICKET_INFO", extra={**data})
 
     await jira_client.post(data, "/rest/api/2/issue/")

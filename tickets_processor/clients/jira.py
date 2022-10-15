@@ -44,10 +44,8 @@ class JiraClient:
             await response.aread()
 
             extra = {
-                "extra": {
-                    "request": self._extract_request_as_dict(response.request),
-                    "response": self._extract_response_as_dict(response),
-                }
+                "request": self._extract_request_as_dict(response.request),
+                "response": self._extract_response_as_dict(response),
             }
 
             if response.is_success:
@@ -73,6 +71,7 @@ class JiraClient:
     @backoff.on_exception(backoff.expo, httpx.HTTPError, max_tries=8)
     async def post(self, data: dict, path: str):
         async with self._get_session() as session:
+            self.logger.info(data)
             response = await session.post(self.base_url + path,
                                           json=data,
                                           auth=(settings.JIRA_USER, settings.JIRA_API_TOKEN))
